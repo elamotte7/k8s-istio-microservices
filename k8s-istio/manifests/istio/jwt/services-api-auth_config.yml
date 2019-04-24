@@ -1,0 +1,17 @@
+apiVersion: "authentication.istio.io/v1alpha1"
+kind: "Policy"
+metadata:
+  name: "jwt-example"
+  namespace: services
+spec:
+  targets:
+  - name: servicea
+  peers:
+  - mtls: {}
+  origins:
+  - jwt:
+      # audiences:
+      # - client-services
+      issuer: "http://146.148.122.219/auth/realms/istio"
+      jwksUri: "http://146.148.122.219/auth/realms/istio/protocol/openid-connect/certs"
+  principalBinding: USE_ORIGIN

@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: serviceb
+  labels:
+    app: serviceb
+spec:
+  ports:
+  - name: http
+    port: 9090
+  selector:
+    app: serviceb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: serviceb
+    version: spring-v1
+  name: serviceb-spring-v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serviceb
+      version: spring-v1
+  template:
+    metadata:
+      labels:
+        app: serviceb
+        version: spring-v1
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTIONS
+          value: -Xms128m -Xmx256m
+        image: gcr.io/istio-microprofile/microservice-spring-b:v1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          tcpSocket:
+            port: 9090
+          initialDelaySeconds: 60
+        name: serviceb
+        ports:
+        - containerPort: 9090
+          name: http
+          protocol: TCP
+        - containerPort: 8778
+          name: jolokia
+          protocol: TCP
+        - containerPort: 9779
+          name: prometheus
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: serviceb-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: serviceb
+    version: spring-v2
+  name: serviceb-spring-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serviceb
+      version: spring-v2
+  template:
+    metadata:
+      labels:
+        app: serviceb
+        version: spring-v2
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTIONS
+          value: -Xms128m -Xmx256m
+        image: gcr.io/istio-microprofile/microservice-spring-b:v2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          tcpSocket:
+            port: 9090
+          initialDelaySeconds: 60
+        name: serviceb
+        ports:
+        - containerPort: 9090
+          name: http
+          protocol: TCP
+        - containerPort: 8778
+          name: jolokia
+          protocol: TCP
+        - containerPort: 9779
+          name: prometheus
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: serviceb-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: serviceb-config
+data:
+  lifetime: "120"
+  failFrequency: "10"

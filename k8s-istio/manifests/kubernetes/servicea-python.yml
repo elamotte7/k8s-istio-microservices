@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicea
+  labels:
+    app: servicea
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: servicea
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: servicea
+    version: python-v1
+  name: servicea-python-v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servicea
+      version: python-v1
+  template:
+    metadata:
+      labels:
+        app: servicea
+        version: python-v1
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTIONS
+          value: -Xms128m -Xmx256m
+        image: gcr.io/istio-microprofile/microservice-python-a:v1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+#          httpGet:
+#            path: /health
+#            port: 8080
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 60
+        name: servicea
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8778
+          name: jolokia
+          protocol: TCP
+        - containerPort: 9779
+          name: prometheus
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: servicea-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: servicea
+    version: python-v2
+  name: servicea-python-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servicea
+      version: python-v2
+  template:
+    metadata:
+      labels:
+        app: servicea
+        version: python-v2
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTIONS
+          value: -Xms128m -Xmx256m
+        image: gcr.io/istio-microprofile/microservice-python-a:v2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          #          httpGet:
+          #            path: /health
+          #            port: 8080
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 60
+        name: servicea
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8778
+          name: jolokia
+          protocol: TCP
+        - containerPort: 9779
+          name: prometheus
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: servicea-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: servicea-config
+data:
+  serviceB_host: serviceb
+  serviceB_http_port: "9090"
+  lifetime: "0"
+  failFrequency: "0"
+  MP_Fault_Tolerance_NonFallback_Enabled: "true"

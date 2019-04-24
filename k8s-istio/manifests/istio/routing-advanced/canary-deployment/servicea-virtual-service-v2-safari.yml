@@ -1,0 +1,24 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: service-a-vs
+spec:
+  hosts:
+  - "servicea.sedona.fr"
+  gateways:
+  - service-a-gateway
+  http:
+    - match:
+      - headers:
+          user-agent:
+            regex: .*Safari/605.1.15.*
+      route:
+      - destination:
+          host: servicea
+          subset: v2
+        weight: 80
+    - route:
+      - destination:
+          host: servicea
+          subset: v1
+        weight: 20

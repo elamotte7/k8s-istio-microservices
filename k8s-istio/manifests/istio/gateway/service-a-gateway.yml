@@ -1,0 +1,35 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: service-a-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - '*'
+    # - "servicea.sedona.fr"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: service-a-vs
+spec:
+  hosts:
+  - '*'
+  # - "servicea.sedona.fr"
+  gateways:
+  - service-a-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /service-a
+    route:
+    - destination:
+        host: servicea
+        port:
+          number: 8080
